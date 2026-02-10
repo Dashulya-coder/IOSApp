@@ -6,3 +6,44 @@
 //
 
 import Foundation
+
+enum Endpoint {
+    case posts(limit: Int, after: String?)
+}
+
+extension Endpoint {
+    var baseURL: URL {
+        URL(string: "http://localhost:8080")!
+        // якщо сервер не локальний — тут міняється тільки цей рядок
+    }
+
+    var path: String {
+        switch self {
+        case .posts:
+            return "/posts"
+        }
+    }
+
+    var queryItems: [URLQueryItem] {
+        switch self {
+        case .posts(let limit, let after):
+            var items = [
+                URLQueryItem(name: "limit", value: "\(limit)")
+            ]
+            if let after {
+                items.append(URLQueryItem(name: "after", value: after))
+            }
+            return items
+        }
+    }
+
+    var urlRequest: URLRequest {
+        var components = URLComponents(url: baseURL.appendingPathComponent(path),
+                                        resolvingAgainstBaseURL: false)!
+        components.queryItems = queryItems
+
+        var request = URLRequest(url: components.url!)
+        request.httpMethod = "GET"
+        return request
+    }
+}
