@@ -19,23 +19,16 @@ struct Post {
 }
 
 extension Post {
-    init(api: ListingPostData) {
-        self.username = "u/\(api.author)"
-        self.domain = api.domain ?? ""
-
-        self.created = Date(timeIntervalSince1970: api.createdUtc)
-
+    init(api: LabedditPostDTO) {
+        self.username = "u/\(api.username)"
+        self.domain = api.domain
+        self.created = Date(timeIntervalSince1970: api.createdAt)
         self.title = api.title
 
-        // пріоритет: url_overridden_by_dest, якщо нема — url
-        let urlString = api.urlOverriddenByDest ?? api.url
-        self.imageURL = URL(string: urlString ?? "")
+        self.imageURL = URL(string: api.imageURL ?? "")
 
-        let ups = api.ups ?? 0
-        let downs = api.downs ?? 0
-        self.rating = ups + downs
-
-        self.numComments = api.numComments ?? 0
+        self.rating = api.ups + api.downs
+        self.numComments = api.comments?.count ?? 0
 
         self.saved = Bool.random()
     }

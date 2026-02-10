@@ -9,6 +9,9 @@ import Foundation
 import UIKit
 
 final class PostViewController: UIViewController {
+    
+    private let service = LabedditService()
+    private var currentPost: Post?
 
     // MARK: - UI
     private let cardView = UIView()
@@ -34,7 +37,49 @@ final class PostViewController: UIViewController {
         view.backgroundColor = .systemBackground
         setupUI()
         setupLayout()
+        loadPost()
         fillFakeData()
+    }
+    
+    private func loadPost() {
+        service.fetchPosts(limit: 1, after: nil) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let posts):
+                    guard let post = posts.first else { return }
+                    self?.currentPost = post
+                    self?.render(post: post)
+                case .failure(let error):
+                    self?.titleLabel.text = "Failed to load post"
+                    self?.headerLabel.text = error.localizedDescription
+                }
+            }
+        }
+    }
+    private func render(post: Post) {
+        headerLabel.text = "\(post.username) • \(timeAgo(from: post.created)) • \(post.domain)"
+        titleLabel.text = post.title
+        ratingLabel.text = "↑ \(formatScore(post.rating))"
+        commentsLabel.text = "💬 \(post.numComments)"
+
+        saved = post.saved   // щоб bookmark оновився
+
+        // картинка поки placeholder (Kingfisher буде в наступному кроці)
+    }
+    
+    private func formatScore(_ value: Int) -> String {
+        if value >= 1_000_000 { return String(format: "%.1fm", Double(value)/1_000_000) }
+        if value >= 1_000 { return String(format: "%.1fk", Double(value)/1_000) }
+        return "\(value)"
+    }
+
+    private func timeAgo(from date: Date) -> String {
+        let seconds = Int(Date().timeIntervalSince(date))
+        let hours = seconds / 3600
+        if hours > 0 { return "\(hours)h" }
+        let minutes = seconds / 60
+        if minutes > 0 { return "\(minutes)m" }
+        return "now"
     }
 
     // MARK: - Setup

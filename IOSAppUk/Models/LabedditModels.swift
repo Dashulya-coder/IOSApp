@@ -7,43 +7,42 @@
 
 import Foundation
 
-// MARK: - Top level
-struct ListingResponse: Codable {
-    let data: ListingData
-}
-
-struct ListingData: Codable {
-    let children: [ListingChild]
+// MARK: - Response
+struct LabedditPostsResponse: Codable {
     let after: String?
+    let posts: [LabedditPostDTO]
 }
 
-struct ListingChild: Codable {
-    let data: ListingPostData
-}
-
-// MARK: - Post data from API
-struct ListingPostData: Codable {
-    let author: String
-    let domain: String?
+// MARK: - Post DTO (from API)
+struct LabedditPostDTO: Codable {
+    let id: String
+    let domain: String
+    let createdAt: TimeInterval
+    let text: String?
+    let imageURL: String?
+    let downs: Int
+    let ups: Int
+    let username: String
     let title: String
-    let createdUtc: TimeInterval
-
-    // image/url fields (у різних постів може бути по-різному)
-    let url: String?
-    let urlOverriddenByDest: String?
-
-    // counters
-    let ups: Int?
-    let downs: Int?
-    let numComments: Int?
-
-    // потрібно для пагінації "after" (на майбутнє)
-    let name: String?
+    let comments: [LabedditCommentDTO]?
 
     enum CodingKeys: String, CodingKey {
-        case author, domain, title, url, ups, downs, name
-        case createdUtc = "created_utc"
-        case numComments = "num_comments"
-        case urlOverriddenByDest = "url_overridden_by_dest"
+        case id, domain, text, downs, ups, username, title, comments
+        case createdAt = "created_at"
+        case imageURL = "image_url"
+    }
+}
+
+struct LabedditCommentDTO: Codable {
+    let username: String
+    let id: String
+    let text: String
+    let ups: Int
+    let downs: Int
+    let postID: String
+
+    enum CodingKeys: String, CodingKey {
+        case username, id, text, ups, downs
+        case postID = "post_id"
     }
 }
