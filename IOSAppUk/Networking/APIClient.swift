@@ -34,6 +34,7 @@ final class APIClient {
             }
 
             do {
+                print(String(data: data, encoding: .utf8) ?? "no data")
                 let decoded = try JSONDecoder().decode(T.self, from: data)
                 completion(.success(decoded))
             } catch {
