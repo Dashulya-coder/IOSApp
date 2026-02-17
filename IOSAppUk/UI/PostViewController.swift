@@ -50,14 +50,19 @@ final class PostViewController: UIViewController {
         service.fetchPosts(limit: 1, after: nil) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self else { return }
+
                 switch result {
-                case .success(let posts):
-                    guard let post = posts.first else {
+                case .success(let payload):
+                    // payload.posts = [Post], payload.after = String?
+                    guard let post = payload.posts.first else {
                         self.showErrorUI(message: "No posts returned.")
                         return
                     }
                     self.currentPost = post
                     self.render(post: post)
+
+                    // якщо треба — можна зберегти after для пагінації:
+                    // self.afterCursor = payload.after
 
                 case .failure(let error):
                     self.showErrorUI(message: error.localizedDescription)
@@ -74,7 +79,7 @@ final class PostViewController: UIViewController {
         postImageView.image = UIImage(systemName: "exclamationmark.triangle")
         updateBookmarkIcon()
     }
-
+    
     // MARK: - Render
     private func render(post: Post) {
         headerLabel.text = "\(post.username) • \(timeAgo(from: post.created)) • \(post.domain)"
