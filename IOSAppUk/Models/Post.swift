@@ -8,6 +8,7 @@
 import Foundation
 
 struct Post {
+    let id: String
     let username: String
     let domain: String
     let created: Date
@@ -19,17 +20,15 @@ struct Post {
 }
 
 extension Post {
-    init(api: LabedditPostDTO) {
+    init(api: PostDTO) {
+        self.id = api.id
         self.username = "u/\(api.username)"
         self.domain = api.domain
         self.created = Date(timeIntervalSince1970: api.createdAt)
         self.title = api.title
-
-        self.imageURL = URL(string: api.imageURL ?? "")
-
-        self.rating = api.ups + api.downs
-        self.numComments = api.comments?.count ?? 0
-
+        self.imageURL = api.imageURL.flatMap(URL.init(string:))
+        self.rating = api.ups + api.downs        // як у твоєму скріні
+        self.numComments = api.comments.count
         self.saved = Bool.random()
     }
 }

@@ -14,14 +14,18 @@ final class LabedditService {
         self.client = client
     }
 
-    func fetchPosts(limit: Int = 1, after: String? = nil, completion: @escaping (Result<[Post], Error>) -> Void) {
+    func fetchPosts(
+        limit: Int = 10,
+        after: String? = nil,
+        completion: @escaping (Result<(posts: [Post], after: String?), Error>) -> Void
+    ) {
         let endpoint = Endpoint.posts(limit: limit, after: after)
 
-        client.request(endpoint: endpoint, responseType: LabedditPostsResponse.self) { result in
+        client.request(endpoint: endpoint, responseType: ListingResponseDTO.self) { result in
             switch result {
             case .success(let response):
-                let posts = response.posts.map(Post.init(api:))
-                completion(.success(posts))
+                let posts = response.posts.map { Post(api: $0) }
+                completion(.success((posts: posts, after: response.after)))
             case .failure(let error):
                 completion(.failure(error))
             }
