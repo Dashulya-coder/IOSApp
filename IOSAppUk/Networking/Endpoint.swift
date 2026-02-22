@@ -14,7 +14,6 @@ enum Endpoint {
 extension Endpoint {
     var baseURL: URL {
         URL(string: "http://127.0.0.1:8080")!
-        // якщо сервер не локальний — тут міняється тільки цей рядок
     }
 
     var path: String {

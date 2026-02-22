@@ -24,7 +24,10 @@ final class LabedditService {
         client.request(endpoint: endpoint, responseType: ListingResponseDTO.self) { result in
             switch result {
             case .success(let response):
-                let posts = response.posts.map { Post(api: $0) }
+                let posts = response.posts.map { dto -> Post in
+                    let saved = SavedPostsStore.shared.isSaved(id: dto.id)
+                    return Post(api: dto, isSaved: saved)
+                }
                 completion(.success((posts: posts, after: response.after)))
             case .failure(let error):
                 completion(.failure(error))
