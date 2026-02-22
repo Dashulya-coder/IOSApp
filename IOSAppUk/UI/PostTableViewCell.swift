@@ -12,6 +12,8 @@ final class PostTableViewCell: UITableViewCell {
     static let reuseId = "PostTableViewCell"
 
     private let postView = PostView()
+    var onSaveTap: ((Post, Bool) -> Void)?
+    var onShareTap: ((Post) -> Void)?
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -40,5 +42,12 @@ final class PostTableViewCell: UITableViewCell {
 
     func configure(with post: Post) {
         postView.configure(with: post)
+        postView.onSaveTap = { [weak self] post, newIsSaved in
+            self?.onSaveTap?(post, newIsSaved)
+        }
+
+        postView.onShareTap = { [weak self] post in
+            self?.onShareTap?(post)
+        }
     }
 }

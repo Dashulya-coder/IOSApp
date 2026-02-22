@@ -23,6 +23,8 @@ final class PostView: UIView {
     private let ratingLabel = UILabel()
     private let commentsLabel = UILabel()
     private let shareButton = UIButton(type: .system)
+    private var post: Post?
+
 
     // MARK: - State
     private var saved: Bool = false {
@@ -30,7 +32,9 @@ final class PostView: UIView {
     }
 
     var onBookmarkToggle: ((Bool) -> Void)?
-
+    var onSaveTap: ((Post, Bool) -> Void)? 
+    var onShareTap: ((Post) -> Void)?
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -45,12 +49,14 @@ final class PostView: UIView {
 
     // MARK: - Public
     func configure(with post: Post) {
-        headerLabel.text = "\(post.username) • \(timeAgo(from: post.created)) • \(post.domain)"
+        self.post = post
+
+        headerLabel.text = "\(post.username) • \(timeAgo(from: post.createdDate)) • \(post.domain)"
         titleLabel.text = post.title
         ratingLabel.text = "↑ \(formatScore(post.rating))"
         commentsLabel.text = "💬 \(post.numComments)"
 
-        saved = post.saved
+        saved = post.isSaved
 
         if let url = post.imageURL {
             postImageView.kf.setImage(with: url)
@@ -118,6 +124,7 @@ final class PostView: UIView {
             return attrs
         }
         shareButton.configuration = config
+        shareButton.addTarget(self, action: #selector(didTapShare), for: .touchUpInside)
 
         bottomBar.addArrangedSubview(ratingLabel)
         bottomBar.addArrangedSubview(commentsLabel)
@@ -158,8 +165,14 @@ final class PostView: UIView {
 
     // MARK: - Actions
     @objc private func didTapBookmark() {
+        guard let post else { return }
         saved.toggle()
-        onBookmarkToggle?(saved)
+        onSaveTap?(post, saved)
+    }
+
+    @objc private func didTapShare() {
+        guard let post else { return }
+        onShareTap?(post)
     }
 
     private func updateBookmarkIcon() {
