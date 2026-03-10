@@ -25,7 +25,10 @@ final class PostView: UIView {
 
     // MARK: - State
     private var saved: Bool = false {
-        didSet { updateBookmarkIcon() }
+        didSet {
+            updateBookmarkIcon()
+            updateBookmarkOverlayStyle()
+        }
     }
 
     var onSaveTap: ((Post, Bool) -> Void)?
@@ -201,6 +204,7 @@ final class PostView: UIView {
         bookmarkShapeLayer.shadowOffset = CGSize(width: 0, height: 2)
 
         bookmarkOverlayView.layer.addSublayer(bookmarkShapeLayer)
+        updateBookmarkOverlayStyle()
     }
 
     private func updateBookmarkOverlayPath() {
@@ -276,6 +280,16 @@ final class PostView: UIView {
     private func updateBookmarkIcon() {
         let name = saved ? "bookmark.fill" : "bookmark"
         bookmarkButton.setImage(UIImage(systemName: name), for: .normal)
+    }
+    
+    private func updateBookmarkOverlayStyle() {
+        if saved {
+            bookmarkShapeLayer.fillColor = UIColor.black.cgColor
+            bookmarkShapeLayer.strokeColor = UIColor.black.cgColor
+        } else {
+            bookmarkShapeLayer.fillColor = UIColor.clear.cgColor
+            bookmarkShapeLayer.strokeColor = UIColor.black.cgColor
+        }
     }
 
     // MARK: - Helpers
