@@ -1,10 +1,3 @@
-//
-//  PostView.swift
-//  IOSAppUk
-//
-//  Created by Daria Ukshe on 17.02.2026.
-//
-
 import UIKit
 import Kingfisher
 
@@ -23,28 +16,40 @@ final class PostView: UIView {
     private let ratingLabel = UILabel()
     private let commentsLabel = UILabel()
     private let shareButton = UIButton(type: .system)
-    private var post: Post?
 
+    // overlay for animated bookmark
+    private let bookmarkOverlayView = UIView()
+    private let bookmarkShapeLayer = CAShapeLayer()
+
+    private var post: Post?
 
     // MARK: - State
     private var saved: Bool = false {
         didSet { updateBookmarkIcon() }
     }
 
-    var onBookmarkToggle: ((Bool) -> Void)?
-    var onSaveTap: ((Post, Bool) -> Void)? 
+    var onSaveTap: ((Post, Bool) -> Void)?
     var onShareTap: ((Post) -> Void)?
-    
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
         setupLayout()
+        setupGesture()
+        setupBookmarkOverlay()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupUI()
         setupLayout()
+        setupGesture()
+        setupBookmarkOverlay()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        updateBookmarkOverlayPath()
     }
 
     // MARK: - Public
@@ -98,6 +103,7 @@ final class PostView: UIView {
         postImageView.backgroundColor = .tertiarySystemFill
         postImageView.contentMode = .scaleAspectFill
         postImageView.clipsToBounds = true
+        postImageView.isUserInteractionEnabled = true
         cardView.addSubview(postImageView)
 
         bottomBar.translatesAutoresizingMaskIntoConstraints = false
@@ -163,6 +169,75 @@ final class PostView: UIView {
         ])
     }
 
+    private func setupGesture() {
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(didDoubleTapImage))
+        doubleTap.numberOfTapsRequired = 2
+        postImageView.addGestureRecognizer(doubleTap)
+    }
+
+    private func setupBookmarkOverlay() {
+        bookmarkOverlayView.translatesAutoresizingMaskIntoConstraints = false
+        bookmarkOverlayView.backgroundColor = .clear
+        bookmarkOverlayView.alpha = 0
+        bookmarkOverlayView.isUserInteractionEnabled = false
+
+        postImageView.addSubview(bookmarkOverlayView)
+
+        NSLayoutConstraint.activate([
+            bookmarkOverlayView.centerXAnchor.constraint(equalTo: postImageView.centerXAnchor),
+            bookmarkOverlayView.centerYAnchor.constraint(equalTo: postImageView.centerYAnchor),
+            bookmarkOverlayView.widthAnchor.constraint(equalToConstant: 90),
+            bookmarkOverlayView.heightAnchor.constraint(equalToConstant: 90)
+        ])
+
+        bookmarkShapeLayer.fillColor = UIColor.clear.cgColor
+        bookmarkShapeLayer.strokeColor = UIColor.white.cgColor
+        bookmarkShapeLayer.lineWidth = 6
+        bookmarkShapeLayer.lineJoin = .round
+        bookmarkShapeLayer.lineCap = .round
+        bookmarkShapeLayer.shadowColor = UIColor.black.cgColor
+        bookmarkShapeLayer.shadowOpacity = 0.25
+        bookmarkShapeLayer.shadowRadius = 4
+        bookmarkShapeLayer.shadowOffset = CGSize(width: 0, height: 2)
+
+        bookmarkOverlayView.layer.addSublayer(bookmarkShapeLayer)
+    }
+
+    private func updateBookmarkOverlayPath() {
+        bookmarkOverlayView.layoutIfNeeded()
+
+        let bounds = bookmarkOverlayView.bounds
+
+        guard bounds.width > 0, bounds.height > 0 else { return }
+
+        let rect = bounds.insetBy(dx: 26, dy: 18)
+        guard rect.width > 0, rect.height > 0 else { return }
+
+        bookmarkShapeLayer.frame = bounds
+        bookmarkShapeLayer.path = makeBookmarkPath(in: rect).cgPath
+    }
+
+    private func makeBookmarkPath(in rect: CGRect) -> UIBezierPath {
+        let path = UIBezierPath()
+
+        guard rect.width > 0, rect.height > 0 else { return path }
+
+        let topLeft = CGPoint(x: rect.minX, y: rect.minY)
+        let topRight = CGPoint(x: rect.maxX, y: rect.minY)
+        let bottomRight = CGPoint(x: rect.maxX, y: rect.maxY)
+        let notch = CGPoint(x: rect.midX, y: rect.maxY - rect.height * 0.28)
+        let bottomLeft = CGPoint(x: rect.minX, y: rect.maxY)
+
+        path.move(to: topLeft)
+        path.addLine(to: topRight)
+        path.addLine(to: bottomRight)
+        path.addLine(to: notch)
+        path.addLine(to: bottomLeft)
+        path.close()
+
+        return path
+    }
+
     // MARK: - Actions
     @objc private func didTapBookmark() {
         guard let post else { return }
@@ -170,9 +245,32 @@ final class PostView: UIView {
         onSaveTap?(post, saved)
     }
 
+    @objc private func didDoubleTapImage() {
+        guard let post else { return }
+
+        saved.toggle()
+        onSaveTap?(post, saved)
+        animateBookmarkOverlay()
+    }
+
     @objc private func didTapShare() {
         guard let post else { return }
         onShareTap?(post)
+    }
+
+    private func animateBookmarkOverlay() {
+        bookmarkOverlayView.alpha = 0
+        bookmarkOverlayView.transform = CGAffineTransform(scaleX: 0.7, y: 0.7)
+
+        UIView.animate(withDuration: 0.18, delay: 0, options: [.curveEaseOut]) {
+            self.bookmarkOverlayView.alpha = 1
+            self.bookmarkOverlayView.transform = .identity
+        } completion: { _ in
+            UIView.animate(withDuration: 0.22, delay: 0.35, options: [.curveEaseIn]) {
+                self.bookmarkOverlayView.alpha = 0
+                self.bookmarkOverlayView.transform = CGAffineTransform(scaleX: 1.08, y: 1.08)
+            }
+        }
     }
 
     private func updateBookmarkIcon() {
