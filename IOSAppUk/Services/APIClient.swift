@@ -22,7 +22,7 @@ final class APIClient {
     ) {
         let request = endpoint.urlRequest
 
-        session.dataTask(with: request) { data, response, error in
+        session.dataTask(with: request) { data, _, error in
             if let error {
                 completion(.failure(error))
                 return
@@ -34,12 +34,12 @@ final class APIClient {
             }
 
             do {
-                print(String(data: data, encoding: .utf8) ?? "no data")
                 let decoded = try JSONDecoder().decode(T.self, from: data)
                 completion(.success(decoded))
             } catch {
                 completion(.failure(error))
             }
-        }.resume()
+        }
+        .resume()
     }
 }

@@ -13,27 +13,26 @@ final class SavedPostsStore {
     private init() {
         loadFromDisk()
     }
-    private var savedById: [String: Post] = [:]
+
+    private var savedById: [String: RedditPost] = [:]
 
     private var fileURL: URL {
         let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         return dir.appendingPathComponent("saved_posts.json")
     }
 
-    // MARK: - Public API
-
     func isSaved(id: String) -> Bool {
         savedById[id] != nil
     }
 
-    func allSavedPosts() -> [Post] {
+    func allSavedPosts() -> [RedditPost] {
         savedById.values.sorted { $0.createdAt > $1.createdAt }
     }
 
-    func save(_ post: Post) {
-        var p = post
-        p.isSaved = true
-        savedById[p.id] = p
+    func save(_ post: RedditPost) {
+        var updated = post
+        updated.isSaved = true
+        savedById[updated.id] = updated
         persistToDisk()
     }
 
@@ -42,7 +41,7 @@ final class SavedPostsStore {
         persistToDisk()
     }
 
-    func toggle(post: Post) -> Bool {
+    func toggle(post: RedditPost) -> Bool {
         if isSaved(id: post.id) {
             remove(id: post.id)
             return false
@@ -52,12 +51,10 @@ final class SavedPostsStore {
         }
     }
 
-    // MARK: - Disk
-
     private func loadFromDisk() {
         do {
             let data = try Data(contentsOf: fileURL)
-            let decoded = try JSONDecoder().decode([String: Post].self, from: data)
+            let decoded = try JSONDecoder().decode([String: RedditPost].self, from: data)
             self.savedById = decoded
         } catch {
             self.savedById = [:]
@@ -73,3 +70,4 @@ final class SavedPostsStore {
         }
     }
 }
+

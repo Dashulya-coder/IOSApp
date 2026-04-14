@@ -7,42 +7,62 @@
 
 import Foundation
 
-// MARK: - Response
-struct LabedditPostsResponse: Codable {
-    let after: String?
-    let posts: [LabedditPostDTO]
-}
-
-// MARK: - Post DTO (from API)
-struct LabedditPostDTO: Codable {
+struct RedditPost: Codable, Equatable, Identifiable {
     let id: String
+    let username: String
     let domain: String
     let createdAt: TimeInterval
-    let text: String?
-    let imageURL: String?
-    let downs: Int
-    let ups: Int
-    let username: String
     let title: String
-    let comments: [LabedditCommentDTO]?
-
-    enum CodingKeys: String, CodingKey {
-        case id, domain, text, downs, ups, username, title, comments
-        case createdAt = "created_at"
-        case imageURL = "image_url"
-    }
-}
-
-struct LabedditCommentDTO: Codable {
-    let username: String
-    let id: String
-    let text: String
+    let imageURLString: String?
     let ups: Int
     let downs: Int
-    let postID: String
+    let commentsCount: Int
+    let urlString: String?
+    var isSaved: Bool
 
-    enum CodingKeys: String, CodingKey {
-        case username, id, text, ups, downs
-        case postID = "post_id"
+    var createdDate: Date {
+        Date(timeIntervalSince1970: createdAt)
+    }
+
+    var rating: Int {
+        ups - downs
+    }
+
+    var numComments: Int {
+        commentsCount
+    }
+
+    var imageURL: URL? {
+        guard let imageURLString else { return nil }
+        return URL(string: imageURLString)
+    }
+
+    var url: URL? {
+        guard let urlString else { return nil }
+        return URL(string: urlString)
     }
 }
+
+enum FeedItem: Identifiable, Equatable {
+    case reddit(RedditPost)
+    case local(Post)
+
+    var id: String {
+        switch self {
+        case .reddit(let post):
+            return "reddit_\(post.id)"
+        case .local(let post):
+            return "local_\(post.id.uuidString)"
+        }
+    }
+
+    var titleForSearch: String {
+        switch self {
+        case .reddit(let post):
+            return post.title
+        case .local(let post):
+            return post.title
+        }
+    }
+}
+

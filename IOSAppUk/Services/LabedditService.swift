@@ -17,21 +17,35 @@ final class LabedditService {
     func fetchPosts(
         limit: Int = 10,
         after: String? = nil,
-        completion: @escaping (Result<(posts: [Post], after: String?), Error>) -> Void
+        completion: @escaping (Result<(posts: [RedditPost], after: String?), Error>) -> Void
     ) {
         let endpoint = Endpoint.posts(limit: limit, after: after)
 
         client.request(endpoint: endpoint, responseType: ListingResponseDTO.self) { result in
             switch result {
             case .success(let response):
-                let posts = response.posts.map { dto -> Post in
-                    let saved = SavedPostsStore.shared.isSaved(id: dto.id)
-                    return Post(api: dto, isSaved: saved)
+                let posts = response.posts.map { dto in
+                    RedditPost(
+                        id: dto.id,
+                        username: dto.username,
+                        domain: dto.domain,
+                        createdAt: dto.createdAt,
+                        title: dto.title,
+                        imageURLString: dto.imageURL,
+                        ups: dto.ups,
+                        downs: dto.downs,
+                        commentsCount: dto.comments.count,
+                        urlString: dto.url,
+                        isSaved: SavedPostsStore.shared.isSaved(id: dto.id)
+                    )
                 }
+
                 completion(.success((posts: posts, after: response.after)))
+
             case .failure(let error):
                 completion(.failure(error))
             }
         }
     }
 }
+

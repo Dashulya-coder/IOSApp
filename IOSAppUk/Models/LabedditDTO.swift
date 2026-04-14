@@ -23,9 +23,10 @@ struct PostDTO: Decodable {
     let ups: Int
     let downs: Int
     let comments: [CommentDTO]
+    let url: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, username, domain, title, ups, downs, comments
+        case id, username, domain, title, ups, downs, comments, url
         case createdAt = "created_at"
         case imageURL = "image_url"
     }

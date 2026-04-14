@@ -29,16 +29,20 @@ extension Endpoint {
             var items = [
                 URLQueryItem(name: "limit", value: "\(limit)")
             ]
+
             if let after {
                 items.append(URLQueryItem(name: "after", value: after))
             }
+
             return items
         }
     }
 
     var urlRequest: URLRequest {
-        var components = URLComponents(url: baseURL.appendingPathComponent(path),
-                                        resolvingAgainstBaseURL: false)!
+        var components = URLComponents(
+            url: baseURL.appendingPathComponent(path),
+            resolvingAgainstBaseURL: false
+        )!
         components.queryItems = queryItems
 
         var request = URLRequest(url: components.url!)

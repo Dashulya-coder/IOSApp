@@ -3,7 +3,6 @@ import Kingfisher
 
 final class PostView: UIView {
 
-    // MARK: - UI
     private let cardView = UIView()
 
     private let headerLabel = UILabel()
@@ -17,13 +16,11 @@ final class PostView: UIView {
     private let commentsLabel = UILabel()
     private let shareButton = UIButton(type: .system)
 
-    // overlay for animated bookmark
     private let bookmarkOverlayView = UIView()
     private let bookmarkShapeLayer = CAShapeLayer()
 
-    private var post: Post?
+    private var post: RedditPost?
 
-    // MARK: - State
     private var saved: Bool = false {
         didSet {
             updateBookmarkIcon()
@@ -31,8 +28,8 @@ final class PostView: UIView {
         }
     }
 
-    var onSaveTap: ((Post, Bool) -> Void)?
-    var onShareTap: ((Post) -> Void)?
+    var onSaveTap: ((RedditPost, Bool) -> Void)?
+    var onShareTap: ((RedditPost) -> Void)?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -55,8 +52,7 @@ final class PostView: UIView {
         updateBookmarkOverlayPath()
     }
 
-    // MARK: - Public
-    func configure(with post: Post) {
+    func configure(with post: RedditPost) {
         self.post = post
 
         headerLabel.text = "\(post.username) • \(timeAgo(from: post.createdDate)) • \(post.domain)"
@@ -69,12 +65,12 @@ final class PostView: UIView {
         if let url = post.imageURL {
             postImageView.kf.setImage(with: url)
         } else {
+            postImageView.kf.cancelDownloadTask()
             postImageView.image = nil
             postImageView.backgroundColor = .tertiarySystemFill
         }
     }
 
-    // MARK: - Setup
     private func setupUI() {
         backgroundColor = .clear
 
@@ -211,7 +207,6 @@ final class PostView: UIView {
         bookmarkOverlayView.layoutIfNeeded()
 
         let bounds = bookmarkOverlayView.bounds
-
         guard bounds.width > 0, bounds.height > 0 else { return }
 
         let rect = bounds.insetBy(dx: 26, dy: 18)
@@ -242,7 +237,6 @@ final class PostView: UIView {
         return path
     }
 
-    // MARK: - Actions
     @objc private func didTapBookmark() {
         guard let post else { return }
         saved.toggle()
@@ -281,7 +275,7 @@ final class PostView: UIView {
         let name = saved ? "bookmark.fill" : "bookmark"
         bookmarkButton.setImage(UIImage(systemName: name), for: .normal)
     }
-    
+
     private func updateBookmarkOverlayStyle() {
         if saved {
             bookmarkShapeLayer.fillColor = UIColor.black.cgColor
@@ -292,19 +286,24 @@ final class PostView: UIView {
         }
     }
 
-    // MARK: - Helpers
     private func formatScore(_ value: Int) -> String {
-        if value >= 1_000_000 { return String(format: "%.1fm", Double(value)/1_000_000) }
-        if value >= 1_000 { return String(format: "%.1fk", Double(value)/1_000) }
+        if value >= 1_000_000 { return String(format: "%.1fm", Double(value) / 1_000_000) }
+        if value >= 1_000 { return String(format: "%.1fk", Double(value) / 1_000) }
         return "\(value)"
     }
 
     private func timeAgo(from date: Date) -> String {
         let seconds = Int(Date().timeIntervalSince(date))
-        let hours = seconds / 3600
-        if hours > 0 { return "\(hours)h" }
+
+        if seconds < 60 { return "\(seconds)s" }
+
         let minutes = seconds / 60
-        if minutes > 0 { return "\(minutes)m" }
-        return "now"
+        if minutes < 60 { return "\(minutes)m" }
+
+        let hours = minutes / 60
+        if hours < 24 { return "\(hours)h" }
+
+        let days = hours / 24
+        return "\(days)d"
     }
 }

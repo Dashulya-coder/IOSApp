@@ -8,18 +8,20 @@ import UIKit
 
 final class PostDetailsViewController: UIViewController {
 
-    private var post: Post
+    private var post: RedditPost
     private let postView = PostView()
 
-    var onPostUpdated: ((Post) -> Void)?
+    var onPostUpdated: ((RedditPost) -> Void)?
 
-    init(post: Post) {
+    init(post: RedditPost) {
         self.post = post
         super.init(nibName: nil, bundle: nil)
         title = ""
     }
 
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,9 +36,11 @@ final class PostDetailsViewController: UIViewController {
             postView.leadingAnchor.constraint(equalTo: safe.leadingAnchor, constant: 16),
             postView.trailingAnchor.constraint(equalTo: safe.trailingAnchor, constant: -16)
         ])
+
         post.isSaved = SavedPostsStore.shared.isSaved(id: post.id)
 
         postView.configure(with: post)
+
         postView.onSaveTap = { [weak self] tappedPost, newIsSaved in
             guard let self else { return }
 
@@ -53,14 +57,12 @@ final class PostDetailsViewController: UIViewController {
             self.postView.configure(with: updated)
             self.onPostUpdated?(updated)
         }
+
         postView.onShareTap = { [weak self] post in
             guard let self else { return }
 
             var items: [Any] = [post.title]
-
             if let url = post.url {
-                items.append(url)
-            } else if let urlString = post.urlString, let url = URL(string: urlString) {
                 items.append(url)
             }
 
