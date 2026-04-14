@@ -7,37 +7,30 @@
 
 import Foundation
 
-struct Post: Codable, Equatable, Hashable {
-    let id: String
-    let username: String
-    let domain: String
-    let createdAt: TimeInterval
+struct Post: Identifiable, Codable, Equatable {
+    let id: UUID
     let title: String
-    let imageURLString: String?
-    let rating: Int
-    let numComments: Int
+    let text: String
+    let authorName: String
+    let imageFileName: String?
+    let createdAt: Date
     var isSaved: Bool
-    let urlString: String?
 
-    var createdDate: Date { Date(timeIntervalSince1970: createdAt) }
-    var imageURL: URL? { imageURLString.flatMap(URL.init(string:)) }
-    var url: URL? { urlString.flatMap(URL.init(string:)) }
-}
-
-extension Post {
-    init(api: PostDTO) {
-        self.init(api: api, isSaved: Bool.random())
-    }
-    init(api: PostDTO, isSaved: Bool) {
-        self.id = api.id
-        self.username = "u/\(api.username)"
-        self.domain = api.domain
-        self.createdAt = api.createdAt
-        self.title = api.title
-        self.imageURLString = api.imageURL
-        self.rating = api.ups + api.downs
-        self.numComments = api.comments.count
+    init(
+        id: UUID = UUID(),
+        title: String,
+        text: String,
+        authorName: String,
+        imageFileName: String? = nil,
+        createdAt: Date = Date(),
+        isSaved: Bool = true
+    ) {
+        self.id = id
+        self.title = title
+        self.text = text
+        self.authorName = authorName
+        self.imageFileName = imageFileName
+        self.createdAt = createdAt
         self.isSaved = isSaved
-        self.urlString = "http://127.0.0.1:8080/posts/\(api.id)"
     }
 }
